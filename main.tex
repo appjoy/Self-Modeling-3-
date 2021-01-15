@@ -1,0 +1,127 @@
+%% \documentclass[sigconf,10pt]{acmart}
+%% \documentclass[sigalternate,10pt]{acmart}
+\documentclass{sig-alternate-10pt}
+\pdfpageheight=11in
+\pdfpagewidth=8.5in
+
+% Added packages
+\usepackage{soul,xcolor}
+\usepackage{enumitem,color}
+\setlist{leftmargin=5.5mm}
+\usepackage{array}
+\usepackage{booktabs} % For formal tables
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{graphicx,amssymb,amsmath,endnotes}
+\usepackage{ulem}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{fancyhdr}
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+%\usepackage{textcomp, libertine}
+\usepackage{hyperref}
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+\renewcommand{\UrlFont}{\ttfamily\small}
+% Copyright
+% \setcopyright{none}
+% \renewcommand\footnotetextcopyrightpermission[1]{}	% Remove this in camera ready
+% \settopmatter{printfolios=true} 
+% \settopmatter{printacmref=false}
+\pagestyle{plain}
+\normalem
+
+\title{Experience: Feasibility of Self Constructive Component-Wise Power Modeling on Modern Smartphones}
+\author{
+Paper ID:77  pages = 12+2
+% Anonymous Author(s)
+}
+
+
+\newcommand{\oldstuff}[1]{}
+\newcommand{\yes}{$\checkmark$}
+\newcommand{\limited}{Limited}
+\newcommand{\no}{$\times$}
+% \definecolor{gray}{rgb}{0.5,0.5,0.5}
+\newcommand{\etc}{{\it etc.}\xspace}
+\newcommand{\etcc}{{\it etc.}}
+\newcommand{\ie}{{\it i.e.,}\xspace}
+\newcommand{\eg}{{\it e.g.,}\xspace}
+\newcommand{\etal}{\emph{et al.}\xspace}
+\newcommand{\SmallCrunch}{\vspace{-0cm}}
+\newcommand{\smallcrunch}{\vspace{-0cm}}
+\newcommand{\questionaj}[1]{{\it #1}}
+\newcommand{\updated}[1]{{\it {}}}
+%\newcommand{\updated}[1]{{\color{red} {updated: #1}}}
+\newcommand{\editaj}[2]{{\sout{#1}\color{red} {#2}}}
+\newcommand{\removeaj}[2]{{\color{red}{\textbf{Remove following:}}}{\sout{#1}}	{\color{red} {\textbf{Because} #2}}}
+\newcommand{\addaj}[1]{{\color{red} {ADD?: #1}}}
+%\newcommand{\highlight}[1]{{\color{blue}#1}}
+\newcommand{\insitu}{{\em in situ}\xspace}
+\newcommand{\name}{{\sc PFOP}\xspace}
+\newcommand{\namee}{{\sc PFOP}}
+\newcommand{\ychurm}[1]{{\hspace{-0.2cm}}}
+\newcommand{\panic}[1]{\vspace{-#1 plus 1pt minus 1pt}}
+\newcommand{\panictwo}[1]{\vspace{-#1 plus 2pt minus 2pt}}
+% \newcommand{\nsection}[1]{\panictwo{0pt}\section{#1}\panictwo{0pt}}
+% \newcommand{\nsubsection}[1]{\panictwo{0pt}\subsection{#1}\panictwo{0pt}}
+% \newcommand{\nsubsubsection}[1]{\panictwo{0pt}\subsubsection{#1}\panictwo{0pt}}
+\newcommand{\flow}{flow\xspace}
+
+\newcommand{\aj}[1]{{\color{blue} {\em #1}}}
+\renewcommand{\st}[1]{}
+% \newcommand{\comment}[1]{{\color{red} \it #1}}
+\newcommand{\comment}[1]{{\em \it #1}}
+% \newcommand{\comment}[1]{}
+
+\newcommand{\forjnl}[1]{{}}
+\newcommand{\dcomment}[1]{{\color{blue} #1}}
+\newcommand{\expr}[1]{{\color{red} Experiments: #1}}
+\newcommand{\coflowone}{C_1}
+\newcommand{\coflowtwo}{C_2}
+\newcommand{\nexuserror}{19.4\%\xspace}
+\newcommand{\pixelerror}{23.8\%\xspace}
+\newcommand{\motoerror}{13.4\%\xspace}
+\newcommand{\nexuserrorreduction}{5.9$\times$\xspace}
+\newcommand{\pixelerrorreduction}{7.2$\times$\xspace}
+\newcommand{\motoerrorreduction}{4.6$\times$\xspace}
+\newcommand{\revv}[1]{{#1}}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\renewcommand{\paragraph}[1]{{\vspace{0.1in} \noindent \bf #1}}
+
+\newcommand*\rot{\rotatebox{90}}
+
+\newcommand{\cut}[1]{{}}
+
+\date{May 2020}
+
+\begin{document}
+\setstcolor{red}
+
+\maketitle
+\input{abstract}
+\pagestyle{plain}
+
+\input{intro}
+\input contribution
+% \input{background}
+%\input{twocomponents}
+\input{motivation2}
+\input{methodology}
+\input{eval_setup}
+
+\input{evaluation}
+\input{related_work}
+\input{conclusion}
+
+\bibliographystyle{abbrv}
+% \bibliography{ref}
+\bibliography{mobile}
+
+% \input{appendix}
+
+\end{document}

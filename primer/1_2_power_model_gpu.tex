@@ -1,0 +1,142 @@
+\subsection{GPU Power Model is App Dependent}
+\label{subsec:gpu}
+
+Next, we show the GPU power model can also be highly dependent on app usage. 
+The GPU gives an example of a component that cannot be exercised alone and we show
+how TPMD models the GPU power incrementally over the CPU model.
+
+%%% Things discussed in this section
+%% 1. Explain GPU is complex in modern smartphones
+%% 2. Explain the GPU frequencies and power states in modern smartphones
+%% 3. Explain complete GPU model
+%% 4. What did we do
+%% 5. Explain results and observation
+%%   5a. Explain per scenario dependent modeling
+%%   5b. Explain the reasons for the observation
+
+%The GPU of modern phones can run at various frequencies and transition among various power states.
+\paragraph{Parameters of the GPU power model}
+In Moto Z3, the GPU can run at 7 different frequencies and has three power states,
+Active, Slumber (offline), and Aware.
+When the GPU is woken out of the Slumber state, it enters the Aware state for a brief duration.
+% \comment{Similarly, Nexus 6 can run at 5 different frequencies and three power states; Active, Init and Nap. Init corresponds to Aware and Nap corresponds to Slumber of Moto Z3}
+%{
+% How does does it stay in Aware?
+%This the initialization phase of the GPU.
+% for a fixed duration? 535 uS on average ( with a 250 uS difference between 435 uS (min) and 635 us (max))
+% }
+The Active state has two sub states, Active-busy when the GPU is computing and Active-idle
+when the GPU is idle. After staying in Active-idle for a threshold interval, the GPU enters the Slumber state.
+Since the GPU never enters the Slumber or Aware state when an app is running, 
+the parameters of the GPU model include only the GPU power draw in Active-busy and Active-idle in each frequency, $p^g_{busy}(g_k), p^g_{idle}(g_k)$, as listed in Table~\ref{tab:parameters}.
+We abbreviate Active-busy and Active-idle states simply
+as GPU Busy and Idle states in the rest of the paper.
+
+\if 0
+Accordingly, we model the GPU power draw as follows:
+\begin{equation}
+    Power_{GPU} = \sum_{j}\sum_{i} u_{ij}*p_{ij}
+    \end{equation}
+where $p_{ij}$ is the power parameter for the $i^{th}$ GPU frequency for the $j^{th}$ power state (Active-busy, Active-idle, Slumber, Aware) and $u_{ij}$ is the corresponding utilization in that frequency and power state.
+\fi
+
+\paragraph{TPMD methodology}
+% Similar to CPU, the GPU of modern smartphones have also vastly developed.
+Initially, we tried to use a GPU benchmark, 3DMark~\cite{3DMark}, to drive the GPU usage into Busy and Idle states under each frequency.
+However, we found that the GPU benchmark renders very different consecutive frames which
+result in rapidly fluctuating GPU utilizations and power monitor readings.
+This makes aligning the power monitor readings with the GPU Busy periods difficult
+which is needed to extract the GPU Busy state power at each frequency.
+%
+% In power trace it was difficult to identify busy and idle traces for GPU benchmarks.This is because utilization is not constant as it continually generates new frames and can’t be paused.
+% In apps the GPU utilization is constant because when no input is given to  the game app it generates the same frame again and again.
+%
+% we can only generate average GPU power coefficients for GPU busy and idle states.
+% Average GPU coefficient depends on GPU utilization i.e  the time GPU is busy to total GPU running time.
+%Average GPU power coefficients so derived is fixed and can not cater to two apps which may have different GPU utilization.
+In contrast, we observe that real apps tend to render very similar consecutive frames in a short period of time which result relatively stable GPU utilization and stable GPU power draw, 
+making it much easier to extract the power monitor reading corresponding to a given GPU utilization
+(see Figure~\ref{fig:power_trace_candycrushturorial} later). 
+%  the rendering task often finishes in less than the 16.7ms per-frame interval and hence the GPU will go through busy and idle states in every 16.7ms interval, making it much easier to manually identity both states. 
+% \questionaj{Why do we have to identify manually? Triggers are not available in atrace?
+% Due to both drift and scaling their is vast alignment problem in aligning each 16.7 ms interval.
+% Alignment problem prevent us from directly using triggers from the event trace.}
+Based on this observation, we directly used selected apps that use 
+only the CPU and GPU to derive the GPU power models. 
+In particular, we derive the CPU model first using the integer-arithmetic microbenchmark\footnote{We found using the CPU model derived using memory-intensive microbenchmark
+resulted in negative GPU coefficients.}
+and then use the difference 
+between the measured phone power and model-estimated CPU power as the ground-truth for the GPU power draw
+in GPU power model derivation.
+
+
+% 5. Explain results and observation
+
+\begin{table*}[tp]
+{\footnotesize
+    \centering
+    \caption{Moto Z3 GPU power model (Busy and Idle power per frequency) with the CPU fixed at 1.056 GHz.}
+    \vspace{-0.1in}
+    \begin{tabular}{|p{11.5mm}|p{22mm}|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    App & Scenario & \multicolumn{14}{c|}{GPU Frequency} \\
+    \cline{3-16}
+     &  & \multicolumn{2}{c|}{257 MHz} & \multicolumn{2}{c|}{342 MHz} & \multicolumn{2}{c|}{414 MHz} & \multicolumn{2}{c|}{515 MHz} & \multicolumn{2}{c|}{596 MHz} & \multicolumn{2}{c|}{670 MHz} & \multicolumn{2}{c|}{710 MHz} \\
+     \cline{3-16}
+     & & Busy & Idle & Busy & Idle & Busy & Idle & Busy & Idle & Busy & Idle & Busy & Idle & Busy & Idle \\
+    \hline
+       \multirow{3}{11mm}{Boat Racing}  & Intro & 208.5 & 134.7 & 253.7 & 67.25 & 283.2 & 149.9 & 423.6 & 124.5 & 581.6 & 79.85 & 633.2 & 162.2 & 703.2 & 184.2 \\
+       \cline{2-16}
+        & Still & 232.3 & 145.5 & 358.0 & 57.00 & 402.8 & 153.0 & 573.9 & 92.17 & 576.3 & 150.0 & 813.9 & 145.0 & 866.3 & 205.9 \\
+         
+         & GPU engy. error (\%) & 232.3 & 145.5 & 358.0 & 57.00 & 402.8 & 153.0 & 573.9 & 92.17 & 576.3 & 150.0 & 813.9 & 145.0 & 866.3 & 205.9 \\
+         
+         \hline
+        \multirow{2}{11mm}{Bricks Breaker}  & Intro & 140.7 & 70.33 & 158.3 & 69.32 & 204.3 & 109.9 & 166.8 & 134.4 & 130.0 & 141.3 & 115.5 & 172.9 & 133.2 & 191.4 \\
+       \cline{2-16}
+         & Still & 180.8 & 72.69 & 185.5 & 72.63 & 177.7 & 113.0 & 243.6 & 112.8 & 271.3 & 115.6 & 375.7 & 138.1 & 441.2 & 154.7 \\
+         \hline
+        \multirow{2}{13mm}{Candy Crush Saga}  & Into & 228.0 & 83.88 & 262.5 & 83.97 & 344.4 & 112.7 & 523.1 & 123.3 & 620.7 & 120.0 & 792.6 & 146.2 & 900.4 & 167.2 \\
+        \cline{2-16}
+         & Tutorial & 226.3 & 92.85 & 228.4 & 89.50 & 330.6 & 117.7 & 445.2 & 134.5 & 519.6 & 137.5 & 660.2 & 160.7 & 855.3 & 171.6 \\
+         \hline
+    \end{tabular}
+    \label{tab:gpumodel_motoz3}
+    \vspace{-0.1in}
+    }
+\end{table*}
+
+% Comparison Table for GPU model with other scenarios Here
+
+We repeated the GPU model derivation for three
+popular games apps, Boat Racing, Candy Crush Saga and Bricks breaker.
+each running two scenarios, as listed in Table~\ref{tab:app_scenario_description}.
+To minimize the variance of CPU power draw, we fixed the CPU frequency at 1.056 GHz,
+and ran each app scenario under each GPU frequency for a duration of 60 seconds.
+
+\paragraph{Derived model}
+Table~\ref{tab:gpumodel_motoz3} shows the derived GPU power models for varying GPU frequencies for Moto Z3 and Table~\ref{tab:gpumodel_nexus6} for Nexus 6.
+%% 5a. Explain per scenario dependent modeling
+We make two observations.
+(1) The GPU power parameters for the same frequency differ with {\it different apps}; at 710 MHz, the GPU Busy power draw for Boat Racing is 10.6\% lower than for Candy Crush Saga on Moto Z3.
+(2) The GPU parameters for the same frequency even differ for {\it different scenarios} 
+of the same app; for Boat Racing, the GPU Busy power draw
+for the Intro scenario is 10.2\% and 29.7\% lower than for the Still scenario
+at 257 MHz and 414 MHz, respectively.
+
+To show the importance of app-specific power modeling, we calculated the error
+in estimating the total GPU energy drain in the second scenario of each app 
+if using the GPU model derived using the first scenario of each app.
+Table~\ref{tab:gpumodel_motoz3} shows that the error ranges between 
+??\%--??\%, ??\%--??\%, and ??\%--??\% for the second scenarios of the three apps.
+
+
+%% 5b. Explain the reasons for the observation
+The above dependence of the GPU power draw on app usage can be attributed  to two main reasons.
+First, the GPU has a large number of mini-cores, but the utilization metric available to the OS only captures the temporal utilization but not the spatial utilization, \ie the percentage of mini-cores that were active.
+Different spatial utilization may drive the GPU into different power state variations that have the same temporal utilization but different power draw.
+
+Second, rendering different frames in different scenarios of the same app or different apps may result in different memory operation mix, and hence using a single CPU model in estimating the CPU power draw portion to be subtracted from the total phone power 
+may result in errors in the GPU power draw  estimation, as we see in \S\ref{sec:primer_cpu}. 
+Such error propagation happens in TPMD which models one component at a time
+and often relies on the models for prior components to estimate the "ground truth" in modeling  the next component. 

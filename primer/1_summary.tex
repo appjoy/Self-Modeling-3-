@@ -1,0 +1,20 @@
+\paragraph{Summary.}
+The above exercise of applying TPMD to derive the CPU and GPU models for 3 phones
+have two important implications.
+%
+(1) TPMD is a laborious time-consuming process. In-situ power modeling
+such as done by SPMD will enable rapid portability of energy related software.
+(2) The GPU power draw is very much dependent on app usage; different
+app usage can lead to variations of the same power state that draw
+different amount of power. Hence {\it any fixed GPU model derived from
+running a particular microbenchmark or app is likely to have high
+estimation error when it is applied for a different app run.} This
+motivates the need for SPMD which is inherently app usage specific.
+%
+\comment{(3) Don't think this should be here. This section is about TPMD. Find where to
+move it.
+Since different scenarios of the same app can drive components
+into different power state variations, {\it the equations from
+different scenarios of the same app run should not be grouped into the
+same system of equations to be fed into the solver in SPMD,} as this
+defeats the app usage specificity nature of SPMD.}

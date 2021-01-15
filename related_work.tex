@@ -1,0 +1,64 @@
+\section{Related Work}
+\label{sec:related}
+
+The large amount of prior work on power modeling can be categorized along three dimensions: 
+model type, using external power monitor or self-metering, and model derivation process.
+
+\paragraph{Utilization-based vs. FSM-based power models.} 
+The large number of power models for different components of
+smartphones can be grouped into two categories based on the way they
+capture two different types of phone component power draw behaviors.
+The first category of power models known as utilization-based models
+(\eg \cite{shye2009into,zhang2010accurate,hotpowermulticore}) captures
+the synchronous power draw behavior of components; where a hardware
+component enters a certain power state and draws power for the
+duration when it is actively used in that state, \eg the CPU running
+at 2 GHz
+% and change of utilization is what triggers the power state change of that component. 
+Consequently, these models use the utilization of a hardware component as an input to the power models.
+% ``trigger'' in modeling power states and state transitions.  
+
+% Such models thus do not capture power behavior of
+% modern wireless components that do not lead to active utilization such
+% as the promotion and tail power behavior of 3G and
+% LTE~\cite{rrc:imc2010,4glte}, and thus can incur high modeling error.
+
+The second category known as non-utilization-based power models captures the asynchronous power 
+draw behavior of hardware components where an app’s usage of a phone component
+triggers that component to enter some power state and continues even beyond the duration of the app usage.
+Non-utilization-based models capture such power behavior using finite state machines (FSMs),
+\eg \cite{arunabimc09,energybasedRA,aro,whatsup:mobicom12,pathak:eurosys12,ding:sigmetrics13}
+for WiFi, 3G and~\cite{4glte} for 4G/LTE. 
+To derive such models, the built-in state machine of such hardware components, \eg the RRC states and
+transitions in the LTE radio, is reverse-engineered and represented in an FSM
+annotated with app utilization, \eg either packet-level traces~\cite{rrc:imc2010,4glte} or
+networking system calls~\cite{pathak:eurosys12}, as the triggers for the state transitions.
+
+\paragraph{Using external power monitor vs. self-metering.}
+Deriving the power models of a mobile device 
+requires ground-truth power draw measurement, whether it is for one component as in case of TPMD or for several components as a whole as in case of SPMD. This can be done using an external power monitor such as Monsoon~\cite{powermonitor} or
+using energy information from the built-in battery interface. 
+
+PowerBooter~\cite{powerbooter:2010} proposed to use battery
+State-of-Charge (SoD) readings to infer the average power draw which has a
+very long generation time.
+%
+Sesame~\cite{sesame:2011} uses drop in the battery capacity during a
+sampling interval to infer the average power draw but it shows a high
+error at 0.1 Hz.
+% 
+V-edge~\cite{vedge:2013} exploits the correlation between change in
+current and voltage to extrapolate power draw (relative to a baseline)
+using only voltage readings.  DevScope~\cite{devscope:2012} studies
+the approach to overcome the coarse granularity of current sensor
+readings to derive power models for a single component at a time.
+%
+Since Android 6, Android phones provided interfaces for power and
+energy readings which however come with limited accuracy as discussed
+in \S\ref{subsec:modelling_sensor}.
+
+
+
+\paragraph{TPMD vs. SPMD.}
+The third dimension of power modeling is whether to derive the model of one phone component state at a time by isolating the measured power for each of the component state as in case of TPMD, or 
+to derive the model for all the component states by solving a system of equations as in case of SPMD, as already discussed in \S\ref{subsec:back}.

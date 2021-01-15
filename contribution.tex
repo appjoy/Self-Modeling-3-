@@ -1,0 +1,72 @@
+\subsection{Our Contribution}
+\label{subsec:contri}
+
+
+In this work, we study the feasibility of SPMD to derive 
+accurate {\it component-wise power models} for modern smartphones.
+In order to present an in-depth analysis within  the  page limit, 
+we focus our feasibility study on two of the most power-hungry 
+phone components, the CPU and GPU, on representative phones from three generations, 
+Pixel 2 (released in 2017), Moto Z3 (2018), and Pixel 4 (2019).
+
+Our key findings are summarized as follows:
+\begin{itemize}
+\item 
+% 	To gain insight into the suitable granularity of app run for applying 
+% an instance of SPMD, \ie the app run interval for which a system of equations
+% is set up and solved and the derived model can be used for,
+% we start with a measurement study of the power model dependence on
+% app usage. 
+	Our results show that both the CPU and the GPU of the 
+three phones exhibit significant power state variations, \ie their 
+power draw for the same power state (for same CPU frequency and same 
+GPU frequency and state) can vary up to  13.5\% and 29.7\% for CPU and GPU, respectively.
+% even when running different scenarios of the same apps. 
+This result suggests that (1) any power model derived via 
+TPMD offline based on a given microbenchmark 
+can be inaccurate when used to model the power draw of 
+different apps or different app scenarios;
+(2) different scenarios of the same app should not be used in 
+the same instance of SPMD. 
+    
+% \cut{
+% \item The built-in power sensor readings available in 
+% modern smartphones can have as much as 17.99\% average 
+% error compared to an external high-resolution power monitor 
+% and hence are not accurate enough to be used in SPMD. Thus we focus 
+% our study using the power monitor. 
+% }
+%
+
+{\color{blue}\item We use statistical tools such as F-test and $R^2$-measurement \st{to} for examining the SPMD modeling results from linear regression solutions. Those statistical testing results show that the modeling results fail to explain the variability of total power consumption.\dcomment{ \st{The main reason is that}} The key reason is that the CPU/GPU usage for the app scenarios such 
+as game apps are highly repetitive at the per-second time scale. This repetition directly makes some of the singular values of the design matrix in the linear regression close to zero. As a result, the regression result becomes very sensitive to even small amount of noise}\footnote{{\color{blue}Intuitively, consider a linear problem $\mathbf{Y}=\mathbf{X}\beta+\epsilon$. The amount of impact of the noise $\epsilon$ to the solution of $\beta$ is about $\|\mathbf{X}^{\dagger}\epsilon\|_2$, where $\mathbf{X}^{\dagger}$ denotes the pseudo-inverse of the design matrix $\mathbf{X}$. Because the noise vector $\epsilon$ is random, so $\epsilon$ may have a component vector $\epsilon_m$ that is in the direction of the smallest singular vector of $\mathbf{X}$. If the smallest singular value of $\mathbf{X}$ denoted by $\min\text{eig}(\mathbf{X})$ is close to zero, then $\|\mathbf{X}^{\dagger}\epsilon_m\|_2=\|\epsilon_m\|_2/\min\text{eig}(\mathbf{X})$ will be extremely large, and thus makes the impact of noise $\|\mathbf{X}^{\dagger}\epsilon\|_2$ very large.}}.
+
+\st{
+% \item 
+However, when limiting SPMD within each of the app scenarios, creating 
+one equation at the per-second time scale 
+cannot create a system of equations with enough diversity for 
+the regression solver to output any meaningful power model parameters.
+%
+\cut{Despite adding many constraints to the regression solver,
+the GPU Idle power is as high as the GPU Busy power. }
+The key reason is that the CPU/GPU usage for the app scenarios such 
+as game apps are highly repetitive; 
+the systems of equations often have a single large singular value.  }
+\item 
+{\color{blue}In order to alleviate this problem of close-to-zero singular values caused by repetitive CPU/GPU utilization level}, we zoom into a smaller time scale, by setting each 
+equation {\color{blue}used in the linear regression} at the millisecond time scale
+to explicitly exploit the {\color{blue} variation of the GPU utilization}. Our results show that doing 
+so can 
+make the regression solver to  output sometimes meaningful model parameters, {\color{blue}but not always. We find that sometimes measurement noise is still large enough to alter the solutions quite significantly.}
+\st{Further, SPMD at such a fine granularity would not scale well as a 1-minute app run would require solving thousands of systems of equations. }
+\if 0
+Our experiments show that the system still does not have enough diversity  
+    at either the micro-scale, \ie with 2 equations in each rendering interval to exploit the GPU state diversity (Busy/Idle), or the nano-scale, \ie with 16 equations in each 16.7ms rendering interval, for two reasons: (1) the component usage lacks diversity,
+    and (2) the noise in the coefficient measurements overshadows the diversity of utilization coefficients in the equations. 
+\fi
+\end{itemize}
+    
+% \st{These findings from our exploration strongly suggest that while SPMD may be useful for energy modeling which only requires a good least-square fitting of the two sides of the energy equations~\cite{sesame:2011}, it remains extremely challenging to derive component-wise power model parameters .}
+{\color{blue}These findings from our exploration conveys some useful guidance for implementing SPMD on modern smartphones: 1) repetitive CPU/GPU utilization level makes SPMD harder to output reasonable modeling results; 2) finer resolution may help; 3) more accurate measurement with low noise is critical for reliable SPMD modeling results.}
+

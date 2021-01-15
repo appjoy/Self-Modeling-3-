@@ -1,0 +1,54 @@
+%\section{Power Model Dependency on App Usage - A TPMD Study}
+%\section{At What Granularity of App Run Should We Apply SPMD?}
+\section{Drawbacks of TPMD}
+\label{sec:primer}
+
+% Since SPMD is meant to capture the power model's dependence on app usage, it should be applied to 
+% each app run interval that exhibits the {\em same} component usage.
+% To gain insight into the extent of such "same" component usage intervals of apps,
+% we start with a study to find out  how much the GPU power models derived using TPMD vary with
+% apps and app scenarios. 
+
+% show the component power draw dependency on app usage 
+% using a representative modern phone, Moto Z3,
+% by performing TPMD to generate the CPU and GPU power models
+% on a representative modern phone, Moto Z3.
+% In particular, we discuss the four-step process of TPMD discussed in \S\ref{sec:back} for the CPU and the GPU.
+For the experiments in this section,
+we use the external Monsoon power monitor ~\cite{monsoonpowermonitor} to measure the phone power draw.
+We keep the screen brightness level at 0 which consumes
+43.21 mA, 57.58 mA, and 78.82 mA respectively for the 3 phones; and this is subtracted
+from the total phone power draw measurement.
+
+\begin{table}[t]
+{\footnotesize
+    \centering
+    \caption{CPU and GPU power model parameters on the 3 phone. (PF: per frequency.)}
+    \vspace{-0.1in}
+    \begin{tabular}{|p{2.25cm}|c|c|c|c|}
+        \hline
+        Model Parameters & Parameter  & \multicolumn{3}{c|}{Number of Parameters}\\
+         \cline{3-5}
+          & Symbol & Pixel 2 & Moto Z3 & Pixel 4\\
+        \hline
+        CPU base power                          & $p^c_{\text{base}}$          &  1      &   1       & 1\\
+        CPU core $i$ power at freq. $f_k$       & $p^c_i(f_k)$          & 31, PF  &  31, PF   & 17, PF\\
+        % TODO: add per frequency per core in the description\\
+        GPU busy power at freq. $g_k$           & $p^g_{\text{busy}}(g_k)$     &  7, PF  &   7, PF   & 5, PF\\
+        GPU idle power at freq. $g_k$           & $p^g_{\text{idle}}(g_k)$     &  7, PF  &   7, PF   & 5, PF\\
+        \hline
+    \end{tabular}
+    \label{tab:parameters}
+    \vspace{-0.2in}
+}
+\end{table}
+
+% \questionaj{We need a paragraph here (perhaps reference table 3?) detailing which 
+% trigger are we logging, where are we logging them from, and is experiment done 
+% using power monitor or power sensor
+
+
+%\input{primer/1_power_model}
+\input{primer/new_GPU}
+
+\input{primer/1_summary}

@@ -1,0 +1,32 @@
+\comment {
+\section{Why only CPU and GPU are considered?}
+\label{sec:twocomponent}
+As we have stated in~\S\ref{sec:motivation} modern smartphones have many components built into it.
+We observe the contribution of CPU, GPU, network, media decoder power components in MotoZ3 for 10 popular Google Apps with more than 1 billion plus installs.
+The findings for these apps are shown in table~\ref{tab:muti_component_analysis}.
+We observe that the solution with four components is not converging.
+So we choose only CPU and GPU, which are major components assuming that we can successfully model these two components and further extend it to cater more components.
+
+\begin{table}[]
+    \centering
+    \caption{SPMD for 10 popular Google Apps with CPU, GPU, network and media decoder}
+    \vspace{-0.1in}
+    \begin{tabular}{|c|c|}
+        \hline
+         App &  \\
+         \hline
+          Google Calculator & \\
+          Google Calendar & \\
+          Google Chrome & \\
+          Google Maps & \\
+          Google News & \\
+          Google Photos & \\
+          Google Playstore & \\
+          Google YouTube & \\
+          Gmail & \\
+         \hline
+    \end{tabular}
+    \label{tab:muti_component_analysis}
+    \vspace{-0.1in}
+\end{table}
+}

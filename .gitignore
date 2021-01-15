@@ -1,0 +1,12 @@
+# vim files
+**.swp
+**.swo
+
+**.aux
+**.bbl
+**.blg
+**.log
+**.out
+main.pdf
+**.xcp
+**.DS_Store

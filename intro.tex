@@ -1,0 +1,260 @@
+\section{Introduction}
+\label{sec:motivation}
+
+\subsection{Background and Motivation}
+\label{subsec:back}
+
+
+% In this section, we provide a brief background and motivation for self-power modeling of mobile devices, and discuss the prior-art. 
+
+% \subsection{Power Modeling of Mobile Devices}
+
+Modern smartphones come with a wide variety of hardware components
+, \eg CPU, GPU, WiFi and LTE NIC, and OLED display. To offer rich 
+user experience, mobile apps running on the phone often utilize 
+several of these components simultaneously, each of these 
+drawing power contributing  to the overall total phone power draw.
+
+Diagnosing and managing the power draw of smartphones using \aj{just} an external power monitor or the phone 
+built-in power sensor  (available in most smartphones today)
+are difficult as they can only measure the total phone power draw.
+Power modeling is a technique that allows breaking down the 
+total phone power draw into the power draw by individual components, 
+and is the foundation for various mobile device power
+management solutions such
+as mobile software energy profiling~\cite{flinn:1999,shye2009into,zhang2010accurate,sesame:2011,pathak2012energy,appscope,ding2017gfxdoctor,facebookbatterymetrics}, energy debugging~\cite{ma2013edoctor,benerjee:2014}, and in-the-wild energy measurement~\cite{chen:sigm2015,androidbatterystats,androidvitals}.  
+
+% A power model for each phone component captures the mathematical correlation between the {\it events} that {trigger} the usage of the component and the resulting component power draw; it is a function takes power events for a given phone component as input and outputs the estimated power draw for that component due to those events.
+{
+Each of the phone components can potentially be 
+in different power states, drawing different amount of power. 
+An empirical power model for a component captures the power 
+draw while the component in each of the possible power state, known as  the {\em power model parameter}.
+%
+Once derived, a component’s power model can be used to estimate 
+the energy drain of the component during the runtime of any app. 
+This is achieved by collecting the duration (utilization) that 
+the component spends in each power state during the app run
+and in post-processing summing up the product of 
+each utilization duration with its corresponding power draw from the power model.
+}
+
+\paragraph{Traditional Power Model Derivation.}
+\label{subsec:tpmd}
+Traditional power model derivation (TPMD) is an offline, largely manual process. 
+\if 0
+It runs microbenchmarks on the phone to exercise the phone components 
+in isolation to induce the power triggering events. The triggers 
+associated with each component are captured along with the 
+instantaneous power measured using an external power monitor 
+or the built-in power sensor. Next, the power used by each 
+phone component is isolated and the power model is derived 
+by extracting the correlation between the triggers and the components’ power draw.
+\fi
+It consists of four major steps: 
+%
+(1) Enumerate all the power states that each component can possibly enter;  
+% 
+(2) develop  microbenchmarks that drive the component into each of these 
+possible power states; 
+%
+(3) run the microbenchmark while collecting the component power draw online; and 
+%
+(4) in offline processing, 
+align the power draw timeline with the microbenchmark execution 
+to find the power draw corresponding to each of the power states 
+that the component was running in. If a component cannot be exercised alone,
+\eg the WiFi NIC cannot be exercised alone without packet 
+processing in the CPU, the power model for the component needs 
+to be derived incrementally (see \S\ref{sec:primer} for an example.)
+
+Although conceptually simple, traditional power model derivation suffers several major drawbacks
+in practice. 
+
+\aj{
+{\it Labor-intensive manual process.}
+Further, TPMD is a laborious process that faces many practical challenges:
+(1) Connecting an external power source to a commodity phone is challenging.
+The technique requires a soldering station and the skills to disassemble 
+the device and solder the power monitor wires to the power management circuit.
+% For example Moto Z3 and Nexus6 have different arrangements.
+%i.e Nexus6 only the back cover has to be removed and probes are connected whereas Z3 requires the total disassembly and removal of the battery.
+%(2) Writing microbenchmarks that force components into different power states require
+(2) The entire process is time consuming.
+For example, the CPU of the Moto Z3 phone released in August 2018 comes with 4 big 
+cores that can be adjusted among 31 frequencies and
+4 LITTLE cores that can be adjusted among 22 frequencies.
+To derive the CPU model, a benchmark is run at each core at each CPU frequency 
+% with 100\% CPU utilization
+for a certain duration and the process is repeated for all the big.LITTLE core-frequency combinations.
+% Some of these frequency combinations may never appear in a real app run.
+% \st{
+% {\it (1) App usage dependence.}
+% {The most serious drawback of offline power model derivation 
+% using microbenchmarks is the modeling error 
+% from not able to capture {\it power state variations} for any particular app execution.  
+% }
+% A power state variation for a component happens when different 
+% functional units inside the component are exercised under different 
+% app usage. As a result, the amount of power the component draws varies  . 
+% An example of this is while the CPU is running in the same frequency with  100\% utilization, 
+% integer arithmetic workload and floating point  arithmetic workload can lead to 13.5\% 
+% different CPU power draw running at 2.45GHz on Moto Z3.
+% The number of possible power state variations can also be unknown or simply 
+% too many to enumerate.}
+
+This cumbersome process inhibits quickly developing power models for diverse phones
+% Because of the laborious nature of TPMD, 
+and due to this, energy profilers have not been able to
+become plug-and-play.  AT\&T's Video Optimizer~\cite{aro}, for example, only
+supports handful of devices. Android Energy
+Profiler~\cite{androidenergyprofiler} resorts to showing energy consumptions as
+Low, Medium, and High, instead of showing accurate quantitative energy drain
+results.
+
+
+{\it Hidden or costly model parameters.}
+First, TPMD assumes all the exact power states for each component are known and are modeled during offline model derivation. In practice, this is hard do for several reasons:
+(1) the microbenchmark author may not be aware of every trigger that can impact component power draw, \eg battery age can impact ??? ;
+(2) power triggers may not be accessible during logging such as at the time of a profile run or may not allow modification by microbenchmarks \eg GPU
+(should this be CPU??) memory utilization; and
+(3) the number of possible power triggers can be too fine-grained and hence too expensive to enumerate \eg int-ops vs flops.
+%(3) enumerating all possible power state variations may not be
+%necessarily useful as many combinations of power state variations 
+%(of different components) may not appear in real apps.
+%
+% (3) logging all triggers can be prohibitively expensive or not allowed by the OS. 
+%  In practice, there are possible hidden triggers not captured in the power models  which may be exercised differently by different apps~\cite{dong2011self}. 
+
+For these reasons, the TPMD-derived power models 
+are typically not comprehensive as they do not model all power triggers and hence
+do not capture the actual component power draw behavior during a particular app run
+which can lead to significant model error. 
+}
+
+% \st{
+% {\it (2) Device and environment dependence.}
+% In addition, power models are phone-specific and hence the TPMD process needs to be repeated,
+% \eg by an OEM phone vendor for all its phone models. 
+% Furthermore, even two devices of the same model can have different 
+% power models depending on the age of the device battery and effect of 
+% external factors such as phone temperature.These factors require 
+% the power models to be re-derived.}
+
+\paragraph{Self-constructive Power Model Derivation.}
+\label{subsec:spmd}
+%
+Self constructive power model derivation (SPMD)~\cite{dong2011self} 
+has the potential to overcome 
+% the app usage/device/ environment dependencies 
+these limitations of TPMD and can enable easier portability of 
+many energy diagnostics solutions such as energy profilers~\cite{flinn:1999,shye2009into,zhang2010accurate,sesame:2011,pathak2012energy,appscope,ding2017gfxdoctor,facebookbatterymetrics} and energy-aware schedulers.
+Instead of developing and running microbenchmarks to drive the 
+phone component into each of the possible power states
+which still cannot capture
+all power state variations, SPMD collects details of each of the 
+actual power states that each phone component ran under, the 
+utilization (duration) in that state, and the total phone power draw 
+using the power sensor or power monitor  during each actual 
+app run. In post-processing, SPMD sets up and solves a system of equations 
+that express the total phone energy drain for each of the time 
+interval as the sum of the energy drain for all the components, which 
+are linear functions of component power draws, 
+\ie each model parameter multiplied by the corresponding utilization.
+
+Thus SPMD is "in-situ"; the component power models are generated 
+at the end of each app run, and hence SPMD avoids the time-consuming 
+manual model derivation in TPMD.
+Second, SPMD is intrinsically phone-specific and app-run-specific, 
+and adapts with environment factors that can affect component power 
+draw such as the battery age, phone temperature, intops vs flops, and GPU memory utilization.
+% Finally, SPMD is intrinsically specific to
+% each app run and hence the relevant phone component usage and power 
+% draw scenario. 
+% As such,
+% {it captures only the relevant power states and power state variations
+% that contribute to each 
+% phone component power draw during specific app run.} 
+Such intrinsic handset, environment, and app specificities make SPMD 
+likely to generate more accurate power models than TPMD; 
+although the derived model may not contain all possible model parameters,
+it will contain all the model parameters that are needed to analyze 
+the energy drain of that particular app run. 
+
+% \if 0
+% The power consumed by a smartphone heavily depends on its hardware components and configurations.
+% Due to it's nature, traditional power modeling provides fixed models.
+% Different apps uses various hardware components to a varying extent with inter-component interactions, which may not be modelled by a fixed power model.
+% 
+% As self modeling is done on device, it is inherently environment agnostic and leads to accurate power modeling.
+% 
+% \fi
+
+\paragraph{Prior Work: Sesame.}
+\label{sec:back}
+%
+Sesame~\cite{dong2011self} was one of the first work to demonstrate 
+the feasibility of self power model derivation.\footnote{We distinguish SPMD from self-metering work such as~\cite{zhang2010accurate,devscope:2012} 
+which used built-in battery interfaces to measure the power or 
+use regression but still used training microbenchmarks to 
+exercise one phone component at a time.
+% and hence the models derived are not app usage agnostic.  
+}
+% Few application of modelling as stated in Sesame could be detecting rogue applications and adding support to OS for determining adequate measures in optimizing battery life in a classical way.
+% Various  models developed in  classical way are also influenced by the variable internal resistance of the device battery.
+% Sesame also mentions that traditional energy models of 1 Hz are fundamentally inadequate for applications such as per-application energy accounting.
+% Sesame idea is to devise a model molding method that achieves high accuracy and high rate when combined with principal component analysis and to realize Sesame on resource-limited mobile devices (as it is impractical to include all predictors that can account for every hardware detail because not all hardware components are visible to the OS and collecting the values of a large number of predictors would incur significant overhead).
+However, its motivation and design goals were not on constructing
+{\it component-wise} power models. Instead, its primary goals were (1)
+modeling the whole phone energy drain at a higher rate, \eg 100 Hz,
+than what the built-in power sensor could provide, \eg 1Hz, and (2)
+doing so without an external high-resolution power monitor so that the model
+could be "personalized" for a given app on a given device.
+% The primary motivations of Sesame are (1) to improve model accuracy by eliminating the model dependencies on hardware, app usage and battery conditions; and (2) to ease model derivation by automatically generating energy models without external assistance.
+%    \item Utilize real usage of every individual user to generate personalized energy models and to adapt % such models for potentially higher accuracy
+%
+% \if 0
+% However, though Sesame~\cite{dong2011self} pioneered the concept 
+% of self power modeling, the study which was conducted over a decade 
+% ago had two major limitations.
+% First, it focused on fine-resolution whole-phone energy drain 
+% estimation, \eg the total phone energy drain at fine-resolutions, 
+% as opposed to per-phone-component power or energy drain estimation.
+% \fi 
+In particular, it uses battery State-of-Charge (SoD) readings to 
+set up energy drain equations at the power sensor sampling 
+resolution (\eg 1s), and uses the solutions to the unknowns to 
+directly estimate the total energy drain at finer time-scales, \eg 10ms.
+The work did not study the accuracy of component power parameters derived.
+
+% However it is important to note that Sesame can incorporate any predictor that can be acquired in software. Sesame further utilizes the Advanced Configuration and Power Interface (ACPI) available on modern mobile systems.
+% ACPI provides platform-independent interfaces for the power states of hardware, including the processor and peripherals.
+% {\bf Device Used\\}
+
+% \cut{ 
+% Further, the study was on an early phone that had much simpler components
+% each with far fewer power states than those in modern smartphones. 
+% In particular, the Nokia N900 phone used had a single-core CPU and a low-end GPU by today's standards,
+% and either the CPU or the GPU could only run in a single  frequency.
+% Sesame models CPU, memory, WiFi, flash disk, and display; the GPU was not modeled. 
+% For a set of 3 benchmarks. % 9 apps,
+% Sesame achieved an average accuracy of 86\% when generating 1 energy drain estimation per second and 82\% at 1 estimation per 10ms against external power monitor measurement.
+% % {their abstract says 95\% and 88\%?. These number are for the T61 laptop. They used a laptop and phone for the evaluation.}
+% }
+
+
+% ~\cite{eprof,androidprofiler}. 
+
+% \if 0
+% They used an full utilization model for there analysis~\cite{economou2006full}~\cite{ranganathan2007simulating}.
+% The model looked like
+% \begin{equation}
+%     Energy_{Total} = c_{o} + \sum{ c_{component} * u_{component}}
+% \end{equation}
+% The total energy is the sum of each component, with each having it own energy coefficient $c_{component}$.
+% They collected predictors from the OS to capture the utilization of components.
+% They used principal component analysis coupled with a linear regression solver to generate the energy model.
+% %{\bf Conclusion\\}
+% \fi
+% 
+% 
